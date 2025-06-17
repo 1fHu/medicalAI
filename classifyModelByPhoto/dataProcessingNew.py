@@ -56,7 +56,7 @@ def extract_dyn(alltrait_one_folder):
     for num in alltrait_one_folder.keys():
         flat = alltrait_one_folder[num][1].flatten()
         if flat.shape[0] != 15:
-            raise ValueError("输入 array 必须能展平成 15 个元素")
+            raise ValueError("input array must be able to flatten to 15 numbers")
         track_info = flat.tolist() # [1,2,3, ...]
         track_info.insert(0, num)
         data.append(track_info)
@@ -66,26 +66,25 @@ def extract_dyn(alltrait_one_folder):
 
 def proc_dyn_data(data):
     df = pd.DataFrame(data, columns=[f"feature_{i}" for i in range(16)])
-    # 按 feature_9 降序排序
+
     sorted_df = df.sort_values(by='feature_9', ascending=False)
 
-    # 筛选 feature_9 > 8 的行 track mean quality
+
     filtered_df = sorted_df[sorted_df['feature_9'] > 8].copy()
 
-    # 计算 feature_1 + feature_4 track distance + mean speed
+
     filtered_df['sum_1_4'] = filtered_df['feature_1'] + filtered_df['feature_4']
 
-    # 选出 sum_1_4 最大的前10行
+
     top10_df = filtered_df.nlargest(7, 'sum_1_4').drop(columns=['sum_1_4'])
 
-    # 从原始 df 中移除这10行
+
     remaining_df = df[~df['feature_0'].isin(top10_df['feature_0'])]
 
-    # 计算剩余行的均值
     mean_row = remaining_df.mean(numeric_only=True)
-    mean_row['feature_0'] = 'mean'  # 添加标识
+    mean_row['feature_0'] = 'mean' 
 
-    # 合并 top10 和均值
+
     final_df = pd.concat([top10_df, pd.DataFrame([mean_row])], ignore_index=True)
     return final_df
 
@@ -106,17 +105,17 @@ def calc_mean(alltrait_one_folder):
     arr_6x5_list = []
     arr_1x15_list = []
 
-    # 遍历所有字典项
+
     for val in alltrait_one_folder.values():
         arr_6x5, arr_1x15 = val
         arr_6x5_list.append(arr_6x5)
         arr_1x15_list.append(arr_1x15)
 
-    # 逐元素求平均
+
     mean_6x5 = np.mean(arr_6x5_list, axis=0)
     mean_1x15 = np.mean(arr_1x15_list, axis=0)
 
-    # 最终保留为一个list形式，包含两个array
+
     final_result = [mean_6x5, mean_1x15]
     return final_result
 
